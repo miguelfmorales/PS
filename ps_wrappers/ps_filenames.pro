@@ -15,9 +15,7 @@ function ps_filenames, folder_names, obs_names_in, dirty_folder = dirty_folder, 
 
   n_filesets = max([n_elements(folder_names), n_elements(obs_names_in), n_elements(ps_foldernames)])
 
-  if n_elements(data_subdirs) eq 0 and not keyword_set(uvf_input) then begin
-    data_subdirs = 'Healpix' + path_sep()
-  endif else begin
+  if n_elements(data_subdirs) gt 0 then begin
     ;; make sure there is no path separator at beginning and there is one at the end
     for i=0, n_elements(data_subdirs)-1 do begin
       if data_subdirs[i] ne '' then begin
@@ -25,7 +23,7 @@ function ps_filenames, folder_names, obs_names_in, dirty_folder = dirty_folder, 
           path_sep()) + path_sep()
       endif
     endfor
-  endelse
+  endif
 
   if n_elements(dirty_folder) gt 0 then begin
     if n_elements(dirty_folder) ne n_elements(folder_names) then begin
@@ -48,7 +46,7 @@ function ps_filenames, folder_names, obs_names_in, dirty_folder = dirty_folder, 
 
   if not keyword_set(rts) and n_elements(data_subdirs) eq 0 then begin
     if keyword_set(uvf_input) then begin
-      data_subdirs = ''
+      data_subdirs = 'grid_data' + path_sep()
     endif else begin
       data_subdirs = 'Healpix' + path_sep()
     endelse
@@ -946,9 +944,9 @@ function ps_filenames, folder_names, obs_names_in, dirty_folder = dirty_folder, 
           ;; Combined
           if keyword_set(exact_obsnames) then begin
             even_file_list = file_search(folder_names[i] + path_sep() + data_subdirs[i] + $
-              'Combined_obs_' + obs_names[i] + '_even*_uvf.sav', count = n_even)
+              'Combined_obs_' + obs_names[i] + '_even*_uvf*.sav', count = n_even)
             odd_file_list = file_search(folder_names[i] + path_sep() + data_subdirs[i] + $
-              'Combined_obs_' + obs_names[i] + '_odd*_uvf.sav', count = n_odd)
+              'Combined_obs_' + obs_names[i] + '_odd*_uvf*.sav', count = n_odd)
             if n_even gt 0 or n_odd gt 0 then begin
               cube_file_list = [even_file_list, odd_file_list]
               n_cubefiles = n_even + n_odd
@@ -959,7 +957,7 @@ function ps_filenames, folder_names, obs_names_in, dirty_folder = dirty_folder, 
             endelse
           endif else begin
             cube_file_list = file_search(folder_names[i] + path_sep() + $
-              data_subdirs[i] + 'Combined_obs_' + obs_names[i] + '*_uvf.sav', $
+              data_subdirs[i] + 'Combined_obs_' + obs_names[i] + '*_uvf*.sav', $
               count = n_cubefiles)
           endelse
           if n_cubefiles gt 0 then begin
@@ -1072,23 +1070,23 @@ function ps_filenames, folder_names, obs_names_in, dirty_folder = dirty_folder, 
             ;; single
             if keyword_set(exact_obsnames) then begin
               even_file_list = file_search(folder_names[i] + path_sep() + data_subdirs[i] + $
-                obs_names[i] + '_even*_uvf.sav', count = n_even)
+                obs_names[i] + '_even*_uvf*.sav', count = n_even)
               odd_file_list = file_search(folder_names[i] + path_sep() + data_subdirs[i] + $
-                obs_names[i] + '_odd*_uvf.sav', count = n_odd)
+                obs_names[i] + '_odd*_uvf*.sav', count = n_odd)
               if n_even gt 0 or n_odd gt 0 then begin
                 cube_file_list = [even_file_list, odd_file_list]
                 n_cubefiles = n_even + n_odd
               endif else begin
                 cube_file_list = file_search(folder_names[i] + path_sep() + $
-                  data_subdirs[i] + obs_names[i] + '_gridded_uvf.sav', count = n_cubefiles)
+                  data_subdirs[i] + obs_names[i] + '*_gridded_uvf*.sav', count = n_cubefiles)
               endelse
             endif else begin
               cube_file_list = file_search(folder_names[i] + path_sep() + $
-                data_subdirs[i] + obs_names[i] + '*_uvf.sav', count = n_cubefiles)
+                data_subdirs[i] + obs_names[i] + '*_uvf*.sav', count = n_cubefiles)
             endelse
             if n_cubefiles gt 0 then begin
               cube_basename = file_basename(cube_file_list)
-              pol_exist = stregex(cube_basename, 'cube[xy][xy].sav', /boolean, /fold_case)
+              pol_exist = stregex(cube_basename, 'uvf_[xy][xy].sav', /boolean, /fold_case)
               if obs_names[i] eq '' then begin
                 obs_name_arr = strarr(n_cubefiles)
                 for j=0, n_cubefiles-1 do begin
@@ -1108,7 +1106,7 @@ function ps_filenames, folder_names, obs_names_in, dirty_folder = dirty_folder, 
                   if min(pol_exist[wh_first]) eq 0 then begin
                     message, 'some files with first obs_name have pol identifiers and some do not'
                   endif
-                  pols = stregex(cube_basename[wh_first], 'cube[xy][xy].sav', /extract, /fold_case)
+                  pols = stregex(cube_basename[wh_first], 'uvf_[xy][xy].sav', /extract, /fold_case)
 
                   pols_inc = pols[0]
                   pol_num = intarr(count_first)
@@ -1147,7 +1145,7 @@ function ps_filenames, folder_names, obs_names_in, dirty_folder = dirty_folder, 
                   if min(pol_exist) eq 0 then begin
                     message, 'some files with given obs_name have pol identifiers and some do not'
                   endif
-                  pols = stregex(cube_basename, 'cube[xy][xy].sav', /extract, /fold_case)
+                  pols = stregex(cube_basename, 'uvf_[xy][xy].sav', /extract, /fold_case)
 
                   pols_inc = pols[0]
                   pol_num = intarr(n_cubefiles)
